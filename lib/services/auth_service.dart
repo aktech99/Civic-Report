@@ -55,7 +55,7 @@ class AuthService {
       return null;
     } catch (e) {
       print('Sign in error: $e');
-      return null;
+      throw Exception('Authentication failed: ${e.toString()}');
     }
   }
 
@@ -71,6 +71,21 @@ class AuthService {
       print('Get user data error: $e');
       return null;
     }
+  }
+
+  // Stream user data for real-time updates
+  Stream<UserModel?> userDataStream(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
+      try {
+        if (doc.exists && doc.data() != null) {
+          return UserModel.fromMap(doc.data()!);
+        }
+        return null;
+      } catch (e) {
+        print('User data stream error: $e');
+        return null;
+      }
+    });
   }
 
   // Sign out

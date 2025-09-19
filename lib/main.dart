@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/user/user_home_screen.dart';
 import 'screens/admin/admin_home_screen.dart';
 import 'screens/staff_manager/staff_home_screen.dart';
+import 'models/user_model.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -41,28 +43,33 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
+  @override
+  _AuthWrapperState createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-    
+
     return StreamBuilder(
       stream: authService.authStateChanges,
       builder: (context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        
+
         if (snapshot.hasData) {
           // User is signed in - determine their role and navigate
-          return FutureBuilder<UserModel?>(
-            future: authService.getUserData(snapshot.data!.uid),
+          return StreamBuilder<UserModel?>(
+            stream: authService.userDataStream(snapshot.data!.uid),
             builder: (context, userSnapshot) {
               if (userSnapshot.connectionState == ConnectionState.waiting) {
                 return Scaffold(body: Center(child: CircularProgressIndicator()));
               }
-              
-              if (userSnapshot.hasData) {
+
+              if (userSnapshot.hasData && userSnapshot.data != null) {
                 switch (userSnapshot.data!.role) {
                   case UserRole.citizen:
                     return UserHomeScreen();
@@ -72,12 +79,12 @@ class AuthWrapper extends StatelessWidget {
                     return StaffHomeScreen();
                 }
               }
-              
+
               return AuthScreen();
             },
           );
         }
-        
+
         return AuthScreen();
       },
     );

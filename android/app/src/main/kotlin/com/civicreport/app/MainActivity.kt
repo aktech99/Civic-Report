@@ -1,4 +1,4 @@
-package com.example.civic_reporter
+package com.civicreport.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -38,11 +38,29 @@ class UserModel {
       email: map['email'],
       name: map['name'],
       phone: map['phone'],
-      role: UserRole.values.firstWhere((e) => e.toString() == map['role']),
+      role: _parseUserRole(map['role']),
       photoUrl: map['photoUrl'],
       civicScore: map['civicScore']?.toDouble() ?? 0,
       createdAt: DateTime.parse(map['createdAt']),
     );
+  }
+
+  static UserRole _parseUserRole(String? roleString) {
+    if (roleString == null) return UserRole.citizen;
+
+    // Handle both formats: "UserRole.admin" and "admin"
+    String cleanRole = roleString.replaceAll('UserRole.', '');
+
+    switch (cleanRole.toLowerCase()) {
+      case 'admin':
+        return UserRole.admin;
+      case 'staffmanager':
+      case 'staff_manager':
+        return UserRole.staffManager;
+      case 'citizen':
+      default:
+        return UserRole.citizen;
+    }
   }
 }
 
